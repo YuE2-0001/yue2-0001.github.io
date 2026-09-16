@@ -1,0 +1,3 @@
+.site-header { height: 64px; }
+.site-header .brand { font-size: .875rem; font-weight: 600; color: var(--muted); }
+.footer-brand { font-family: inherit; font-size: .875rem; letter-spacing: 0; }

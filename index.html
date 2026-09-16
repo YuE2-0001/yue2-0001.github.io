@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YuE2 · Anonymous ICLR submission</title>
+  <meta name="description" content="YuE2 unifies symbolic and audio music generation at frontier quality. Symbolic planning turns lyrics and style into an editable score, then a full song with vocals and accompaniment.">
+  <meta name="theme-color" content="#faf6ef">
+  
+  <link rel="preload" href="vendor/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin="">
+  <link rel="stylesheet" href="vendor/abcjs-audio.css">
+  <link rel="stylesheet" href="static/styles.css?v=20260913-interstellar">
+  <link rel="stylesheet" href="static/agentic-editing.css?v=20260910-editing2">
+<meta name="robots" content="noindex, nofollow, noarchive"><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="static/submission.css"></head>
+<body>
+  <div class="masthead" id="top">
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Anonymous submission home">Anonymous submission</a>
+    
+  </header>
+
+    <section class="hero" aria-labelledby="heroTitle">
+      <p class="article-meta">ICLR submission · Supplementary demos</p>
+      <h1 id="heroTitle">Frontier quality. <span>Music, with a plan.</span></h1>
+      <p class="hero-subtitle">YuE2 unifies symbolic and audio music generation in one model, with frontier song quality competitive with Suno v5/v6. Through symbolic planning, it writes an editable score, then brings the composition to life with vocals and accompaniment.</p>
+      
+      
+      <nav class="article-contents" aria-label="On this page">
+        <a href="#abc-cot-gen">Listen</a>
+        <a href="#cover">Cover &amp; Editing</a>
+        <a href="#special-prompt-control">Genre Explorer</a>
+        <a href="#model-overview">Model &amp; Results</a>
+      </nav>
+    </section>
+  </div>
+
+  <main>
+    <section class="module-section showcase" id="abc-cot-gen" aria-labelledby="showcaseTitle">
+      <div class="section-head">
+        <div class="section-heading-row"><h2 id="showcaseTitle">From score to song</h2><button class="shuffle-play ghost-button" type="button" data-shuffle-play="planned">Shuffle &amp; play</button></div>
+        <p>Listen to a song, then explore the melody, rhythm, and chords in its symbolic plan.</p>
+      </div>
+
+      <div class="showcase-layout">
+        <aside class="case-rail" aria-label="Featured cases">
+          <div class="rail-heading"><strong>Selected scores</strong><span id="railCount"></span></div>
+          <div class="filter-panel">
+            <label>
+              <span>Search</span>
+              <input id="searchInput" type="search" placeholder="Genre, tags, lyrics">
+            </label>
+            <label>
+              <span>Language</span>
+              <select id="languageFilter"></select>
+            </label>
+            <label>
+              <span>Genre</span>
+              <select id="genreFilter"></select>
+            </label>
+            <label>
+              <span>Sort</span>
+              <select id="sortSelect">
+                <option value="random">Random order</option>
+                <option value="curated">Curated order</option>
+                <option value="genre">Genre A–Z</option>
+                <option value="language">Language</option>
+                <option value="pages">Score pages</option>
+              </select>
+            </label>
+          </div>
+          <div class="case-list-viewport">
+            <div id="caseRail" class="case-list" role="region" aria-label="Selected scores" tabindex="0"></div>
+          </div>
+        </aside>
+
+        <article class="case-stage" aria-live="polite" id="currentDemo">
+          <div class="stage-head">
+            <div>
+              <p id="selectedKicker" class="eyebrow">Selected score</p>
+              <h2 id="selectedTitle">Loading selected song…</h2>
+              <span class="now-playing-label" hidden="">Now playing</span>
+            </div>
+            <button id="copyAbc" class="ghost-button" type="button">Copy ABC</button>
+          </div>
+
+          <div class="audio-pair">
+            <div class="player-block song-player-block">
+              <span>The generated song</span>
+              <div id="musicAudio"></div>
+            </div>
+            <div class="player-block score-player-block">
+              <span>The symbolic score</span>
+              <div id="abcSynth" class="abc-synth" aria-live="polite"></div>
+              <details class="recorded-score">
+                <summary>Original score recording</summary>
+                <div id="recordedScore"></div>
+              </details>
+            </div>
+          </div>
+
+          <div class="abc-plan-summary" id="abcPlanSummary" aria-label="ABC plan summary"></div>
+
+          <div class="tabs" role="tablist" aria-label="Case views">
+            <button id="scoreTab" class="tab active" data-tab="score" role="tab" aria-selected="true" aria-controls="scorePanel" type="button">Score</button>
+            <button id="abcTab" class="tab" data-tab="abc" role="tab" aria-selected="false" aria-controls="abcPanel" tabindex="-1" type="button">Raw ABC</button>
+            <button id="lyricsTab" class="tab" data-tab="lyrics" role="tab" aria-selected="false" aria-controls="lyricsPanel" tabindex="-1" type="button">Lyrics</button>
+            <button id="promptTab" class="tab" data-tab="prompt" role="tab" aria-selected="false" aria-controls="promptPanel" tabindex="-1" type="button">Style prompt</button>
+          </div>
+
+          <section id="scorePanel" class="tab-panel active" role="tabpanel" aria-labelledby="scoreTab">
+            <div class="sheet-toolbar">
+              <strong id="sheetLabel">Interactive ABC score</strong>
+              <span>Red notes follow the score recording.</span>
+            </div>
+            <div id="sheetFrame" class="sheet-frame">
+              <div id="abcRenderedScore" class="abc-rendered-score"></div>
+            </div>
+            <details id="originalScoreDetails" class="original-score">
+              <summary>View original score pages</summary>
+              <div id="originalScorePages" class="original-score-pages"></div>
+            </details>
+          </section>
+
+          <section id="abcPanel" class="tab-panel" role="tabpanel" aria-labelledby="abcTab" hidden="">
+            <pre id="abcText"></pre>
+          </section>
+
+          <section id="lyricsPanel" class="tab-panel" role="tabpanel" aria-labelledby="lyricsTab" hidden="">
+            <pre id="lyricsText"></pre>
+          </section>
+
+          <section id="promptPanel" class="tab-panel" role="tabpanel" aria-labelledby="promptTab" hidden="">
+            <p id="promptText" class="prompt-text"></p>
+          </section>
+        </article>
+      </div>
+    </section>
+
+    <section class="module-section case-browser compact-gallery" aria-label="More selected ABC generations">
+      <details>
+        <summary>
+          <span>All selected scores</span>
+          <small id="caseSummary"></small>
+        </summary>
+        <div id="caseGrid" class="case-grid"></div>
+      </details>
+    </section>
+
+    <section class="module-section" id="cover" aria-labelledby="coverTitle">
+      <div class="section-head">
+        <div class="section-heading-row"><h2 id="coverTitle">Cover &amp; Editing</h2><button class="shuffle-play ghost-button" type="button" data-shuffle-play="covers">Shuffle &amp; play</button></div>
+        <p>A familiar song can take a different shape. Listen to changes in melody, lyrics, tempo, and arrangement.</p>
+      </div>
+      <div id="coverGrid" class="cover-grid"></div>
+      <section class="agentic-section" id="agentic-music-editing" aria-labelledby="agenticTitle">
+        <h3 id="agenticTitle">Agentic music editing</h3>
+        <div id="agenticStory"><p>A song takes shape through a conversation. Loading the editing story…</p></div>
+        <noscript><p>Enable JavaScript to explore the conversation, hear the songs and play their scores.</p></noscript>
+      </section>
+    </section>
+
+    <section class="module-section" id="special-prompt-control" aria-labelledby="specialPromptTitle">
+      <div class="section-head">
+        <div class="section-heading-row"><h2 id="specialPromptTitle">Genre Explorer</h2><button class="shuffle-play ghost-button" type="button" data-shuffle-play="explorer">Shuffle &amp; play</button></div>
+        <p id="genreDescription">The listening selection, gathered across genres and languages.</p>
+      </div>
+      <div class="explorer-filters filter-panel">
+        <label><span>Search</span><input id="explorerSearch" type="search" placeholder="Genre, tags, lyrics"></label>
+        <label><span>Language</span><select id="explorerLanguage"></select></label>
+        <label><span>Genre</span><select id="explorerGenre"></select></label>
+        <label><span>Generation</span><select id="explorerMode"><option value="all">All songs</option><option value="planned">With symbolic planning</option><option value="direct">Direct generation</option></select></label>
+      </div>
+      <p id="explorerStatus" class="results-status" role="status"></p>
+      <div id="explorerSpotlight" class="explorer-spotlight" hidden=""></div>
+      <div id="explorerGrid" class="explorer-grid"></div>
+      <button id="loadMore" class="load-more ghost-button" type="button">Show more songs</button>
+    </section>
+
+    <section class="module-section model-overview" id="model-overview" aria-labelledby="overviewTitle">
+      <div class="section-head">
+        <h2 id="overviewTitle">Model &amp; Results</h2>
+        <p>YuE2 (best-of-8) reaches <strong id="resultScore">6.9632</strong> on SongBench, the highest observed mean among 17 evaluated settings on WildSongBench (192 prompts). Suno v5 scores 6.8721 in the same comparison. Suno v6 and Suno v6 Wild score 6.5562 and 6.4195, respectively.</p>
+      </div>
+
+      <figure class="paper-figure" id="paper-figure-1">
+        <div class="paper-figure-heading"><div><p class="eyebrow">WildSongBench</p><h3>YuE2 at the frontier.</h3></div><a href="static/figures/frontier-teaser.pdf?v=20260912-labels-v2" target="_blank" rel="noopener">Vector PDF <span aria-hidden="true">↗</span></a></div>
+        <a class="paper-figure-image" href="static/figures/frontier-teaser.pdf?v=20260912-labels-v2" target="_blank" rel="noopener" aria-label="Open the WildSongBench comparison as a zoomable PDF"><img src="static/figures/frontier-teaser.svg?v=20260912-labels-v2" alt="WildSongBench comparison: 17 system settings, including Suno v6 and v6 Wild, compared on song quality and text alignment. YuE2 and YuE2 best-of-8 are competitive with the evaluated proprietary systems. Bubble area represents AudioBox production quality." width="1980" height="854" loading="lazy" decoding="async" fetchpriority="low"></a>
+        <figcaption>Song quality and text alignment on WildSongBench. Bubble area shows AudioBox PQ; black outlines mark Pareto optima on the two plotted axes. Bo8 = best-of-8. <a href="#evaluation-protocol">How to read the indices</a>.</figcaption>
+      </figure>
+
+      <figure class="paper-figure" id="paper-architecture">
+        <div class="paper-figure-heading"><div><p class="eyebrow">Model architecture</p><h3>Composing in symbols, performing in audio.</h3></div><a href="static/figures/yue2-overview.pdf?v=20260912-paper" target="_blank" rel="noopener">Vector PDF <span aria-hidden="true">↗</span></a></div>
+        <a class="paper-figure-image" href="static/figures/yue2-overview.pdf?v=20260912-paper" target="_blank" rel="noopener" aria-label="Open the model architecture as a zoomable PDF"><img src="static/figures/yue2-overview.svg?v=20260912-paper" alt="YuE2 architecture: an AR–NAR Mixture-of-Transformers turns an editable symbolic score into semantic tokens, acoustic latents, and full-song audio. The same generator supports creation, covering, and editing." width="2352" height="1191" loading="lazy" decoding="async" fetchpriority="low"></a>
+        <figcaption>An editable score becomes semantic music tokens, acoustic latents, and full-song audio. The model has approximately 3.59B parameters and 28 layers, and supports creation, covering, and editing. The AR and NAR experts share an attention computation while using separate normalization, projections, and MLPs.</figcaption>
+      </figure>
+
+      <details class="benchmark-details full-comparison" id="benchmarkDetails">
+        <summary>Explore benchmark scores <span>WildSongBench · 17 settings · 9 metrics</span></summary>
+        <div class="benchmark-detail-content">
+          <div class="benchmark-controls"><div class="benchmark-dataset"><strong>WildSongBench</strong><span>192 prompts</span></div><label class="metric-select"><span>Compare by</span><select id="benchmarkMetric" aria-label="Evaluation metric"><option value="songbench_global_avg">SongBench</option></select></label></div>
+          <p id="benchmarkStatus" class="benchmark-status" role="status"></p>
+          <div class="comparison-scroll"><table><caption id="comparisonCaption">WildSongBench · SongBench</caption><thead><tr><th scope="col">Rank</th><th scope="col">System / setting</th><th scope="col">Prompts</th><th scope="col" id="comparisonMetric">SongBench ↑</th></tr></thead><tbody id="comparisonRows"></tbody></table></div>
+          <div class="benchmark-bottom"><p>Updated September 12, 2026 · rankings vary by metric.</p><a href="data/benchmark-results.csv?v=20260912-suno-v6" download="">Download results <span aria-hidden="true">↓</span></a></div>
+        </div>
+      </details>
+      <details class="evaluation-protocol" id="evaluation-protocol"><summary>How to read these results</summary><div class="protocol-copy">
+            <p><strong>WildSongBench.</strong> 192 prompts, 17 system settings, and the paper’s nine automatic metrics. SongBench averages all seven dimensions; SongEval averages all five. Musicality is also reported separately for each evaluator. Both YuE2 settings use melody-and-chord symbolic planning.</p>
+            <p><strong>Selection.</strong> YuE2, the public baselines, and Suno v6 and v6 Wild use two candidates and four ASR repeats per candidate, followed by lower-PER selection. Earlier proprietary outputs retain their delivered-candidate protocols. YuE2 best-of-8 selects from eight generations using SongBench Musicality, then Q3O Control, then PER. The comparison therefore retains different selection budgets.</p>
+          </div></details>
+      <!-- BEGIN COMPONENT RESULTS -->
+      <section class="paper-component" id="mert2" aria-labelledby="mert2Title">
+        <figure class="paper-figure" id="paper-mert2-architecture">
+          <div class="paper-figure-heading"><div><p class="eyebrow">MERT2 · Music representations</p><h3 id="mert2Title">Learning the structure behind the sound.</h3></div><a href="static/figures/mert2-ssl.pdf?v=20260912-paper" target="_blank" rel="noopener">Vector PDF <span aria-hidden="true">↗</span></a></div>
+          <a class="paper-figure-image" href="static/figures/mert2-ssl.pdf?v=20260912-paper" target="_blank" rel="noopener" aria-label="Open the MERT2 architecture as a zoomable PDF"><img src="static/figures/mert2-ssl.svg?v=20260912-paper" alt="MERT2 architecture: offline target synthesis combines MuQ and Qwen2-Audio features into four code streams. A ConvNeXt frontend and 24-layer Conformer learn by masked prediction, then branch into full-song representations for SheetSage2 and a causal tokenizer curriculum for YuE2." width="3960" height="1908" loading="lazy" decoding="async" fetchpriority="low"></a>
+          <figcaption>MERT2 provides the music representations behind both analysis and generation. A ConvNeXt frontend and 24-layer Conformer learn to predict masked codes built from complementary MuQ and Qwen2-Audio features. Full-song adaptation supplies SheetSage2 with musical context; a separate causal branch becomes YuE2’s 25-Hz semantic tokenizer.</figcaption>
+        </figure>
+
+        <div class="component-results">
+          <h4>State of the art on MARBLE</h4>
+          <p>MERT2-30s and MERT2-FS (full-song) achieve <strong>SOTA on 14 of 15 MARBLE metrics</strong>, leading across tagging, key, genre, and emotion recognition.</p>
+          <dl class="component-highlights" aria-label="MERT2 benchmark highlights">
+            <div><dt>SOTA metrics<small>MERT2-30s &amp; MERT2-FS</small></dt><dd>14<span> / 15</span></dd></div>
+            <div><dt>Genre accuracy · GTZAN<small>MERT2-30s · score × 100</small></dt><dd>91.72</dd></div>
+            <div><dt>Key refined accuracy · GiantSteps<small>MERT2-FS · score × 100</small></dt><dd>67.05</dd></div>
+          </dl>
+        </div>
+
+        <details class="benchmark-details full-comparison component-comparison" id="mert2Results">
+          <summary>Explore MERT2 benchmark scores <span>MARBLE · 15 metrics · 2 encoders</span></summary>
+          <div class="benchmark-detail-content">
+            <div class="comparison-scroll" tabindex="0" role="region" aria-label="MERT2 MARBLE comparison; scroll horizontally on small screens">
+              <table><caption>Scores × 100 · higher is better · bold marks the highest displayed score.</caption><thead><tr><th scope="col">Benchmark / metric</th><th scope="col">Best published baseline</th><th scope="col" class="model-value">MERT2-30s</th><th scope="col" class="model-value">MERT2-FS</th></tr></thead><tbody>
+                <tr><th scope="row">MTT · Tagging<small>ROC-AUC</small></th><td class="score-value">91.70<small>PupuJEPA-Large</small></td><td class="score-value model-value"><strong>91.91</strong></td><td class="score-value model-value">91.74</td></tr>
+                <tr><th scope="row">MTT · Tagging<small>Average precision</small></th><td class="score-value">40.80<small>PupuJEPA-Large</small></td><td class="score-value model-value"><strong>41.29</strong></td><td class="score-value model-value">41.20</td></tr>
+                <tr><th scope="row">GiantSteps · Key<small>Refined accuracy</small></th><td class="score-value">66.10<small>PupuJEPA-Large</small></td><td class="score-value model-value">66.97</td><td class="score-value model-value"><strong>67.05</strong></td></tr>
+                <tr><th scope="row">GTZAN · Genre<small>Accuracy</small></th><td class="score-value">86.90<small>PupuJEPA-Large</small></td><td class="score-value model-value"><strong>91.72</strong></td><td class="score-value model-value">90.69</td></tr>
+                <tr><th scope="row">GTZAN · Beat<small>F1</small></th><td class="score-value"><strong>91.00</strong><small>PupuJEPA-Large</small></td><td class="score-value model-value">90.59</td><td class="score-value model-value">90.57</td></tr>
+                <tr><th scope="row">EmoMusic · Valence<small>R²</small></th><td class="score-value">62.50<small>PupuJEPA-Large</small></td><td class="score-value model-value">63.23</td><td class="score-value model-value"><strong>63.52</strong></td></tr>
+                <tr><th scope="row">EmoMusic · Arousal<small>R²</small></th><td class="score-value">78.50<small>PupuJEPA-Huge</small></td><td class="score-value model-value"><strong>80.01</strong></td><td class="score-value model-value">78.14</td></tr>
+                <tr><th scope="row">MTG-Jamendo · Instrument<small>ROC-AUC</small></th><td class="score-value">78.40<small>PupuJEPA-Large</small></td><td class="score-value model-value"><strong>80.27</strong></td><td class="score-value model-value"><strong>80.27</strong></td></tr>
+                <tr><th scope="row">MTG-Jamendo · Instrument<small>Average precision</small></th><td class="score-value">21.20<small>PupuJEPA-Large</small></td><td class="score-value model-value">22.89</td><td class="score-value model-value"><strong>23.51</strong></td></tr>
+                <tr><th scope="row">MTG-Jamendo · Mood / theme<small>ROC-AUC</small></th><td class="score-value">76.20<small>PupuJEPA-Large</small></td><td class="score-value model-value"><strong>79.44</strong></td><td class="score-value model-value">78.74</td></tr>
+                <tr><th scope="row">MTG-Jamendo · Mood / theme<small>Average precision</small></th><td class="score-value">15.50<small>Dasheng-1.2B</small></td><td class="score-value model-value"><strong>16.68</strong></td><td class="score-value model-value">15.74</td></tr>
+                <tr><th scope="row">MTG-Jamendo · Genre<small>ROC-AUC</small></th><td class="score-value">86.30<small>AudioMAE++</small></td><td class="score-value model-value"><strong>88.01</strong></td><td class="score-value model-value">87.98</td></tr>
+                <tr><th scope="row">MTG-Jamendo · Genre<small>Average precision</small></th><td class="score-value">20.10<small>PupuJEPA-Large / PupuJEPA-Huge</small></td><td class="score-value model-value"><strong>21.22</strong></td><td class="score-value model-value">20.66</td></tr>
+                <tr><th scope="row">MTG-Jamendo · Top 50<small>ROC-AUC</small></th><td class="score-value">83.10<small>AudioMAE++ / PupuJEPA-Huge</small></td><td class="score-value model-value"><strong>84.18</strong></td><td class="score-value model-value">84.13</td></tr>
+                <tr><th scope="row">MTG-Jamendo · Top 50<small>Average precision</small></th><td class="score-value">31.10<small>AudioMAE++</small></td><td class="score-value model-value"><strong>32.17</strong></td><td class="score-value model-value">31.62</td></tr>
+              </tbody></table>
+            </div>
+            <p class="component-protocol">SOTA counts use the best score across the two MERT2 encoders against the nine published baselines in this comparison. Both encoders have 632M parameters. MERT2-30s uses a 30-second training context; MERT2-FS uses 300 seconds. These are full-context representation benchmarks. MERT2 reports the best observed results across representations selected using test scores; each ROC-AUC / AP pair uses the same representation.</p>
+            <div class="benchmark-bottom"><p>Published baseline comparison</p><a href="data/mert2-marble-results.csv?v=20260909-fs21" download="">Download all 11 models <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </details>
+      </section>
+
+      <section class="paper-component" id="sheetsage2" aria-labelledby="sheetsage2Title">
+        <figure class="paper-figure" id="paper-sheetsage2-architecture">
+          <div class="paper-figure-heading"><div><p class="eyebrow">SheetSage2 · Audio to score</p><h3 id="sheetsage2Title">Hear a song. Read its composition.</h3></div><a href="static/figures/sheetsage2-overview.pdf?v=20260912-paper" target="_blank" rel="noopener">Vector PDF <span aria-hidden="true">↗</span></a></div>
+          <a class="paper-figure-image" href="static/figures/sheetsage2-overview.pdf?v=20260912-paper" target="_blank" rel="noopener" aria-label="Open the SheetSage2 architecture as a zoomable PDF"><img src="static/figures/sheetsage2-overview.svg?v=20260912-paper" alt="SheetSage2 architecture: a full-song MERT2-FS encoder with trainable adapters feeds a six-layer autoregressive decoder. Task prompts select beat, section, key, chord, and melody events, which share a timeline and become ABC notation and a lead sheet." width="4070" height="2268" loading="lazy" decoding="async" fetchpriority="low"></a>
+          <figcaption>SheetSage2 turns a recording into an editable lead sheet. A full-song MERT2-FS encoder, adapted with LoRA, feeds a six-layer autoregressive decoder. Task prompts select beats, sections, keys, chords, and melodies; a shared event timeline becomes ABC notation with vocal and instrumental melody voices. These scores supply symbolic training targets for YuE2.</figcaption>
+        </figure>
+
+        <div class="component-results">
+          <h4>Six transcription tasks, one model</h4>
+          <p>SheetSage2 achieves <strong>SOTA on 10 of 13 benchmark metrics</strong> with one model for beat, downbeat, key, chord, structure, and melody transcription.</p>
+          <dl class="component-highlights" aria-label="SheetSage2 benchmark highlights">
+            <div><dt>SOTA metrics<small>One model · six transcription tasks</small></dt><dd>10<span> / 13</span></dd></div>
+            <div><dt>Vocal melody · RWC-Pop<small>Pitch-class note F1 · score × 100</small></dt><dd>82.51</dd></div>
+            <div><dt>Chord recognition · osu2017<small>Maj/min · score × 100</small></dt><dd>90.08</dd></div>
+          </dl>
+        </div>
+
+        <details class="benchmark-details full-comparison component-comparison" id="sheetsage2Results">
+          <summary>Explore SheetSage2 benchmark scores <span>6 tasks · 13 metrics</span></summary>
+          <div class="benchmark-detail-content">
+            <div class="comparison-scroll" tabindex="0" role="region" aria-label="SheetSage2 benchmark comparison; scroll horizontally on small screens">
+              <table><caption>Scores × 100 · higher is better · bold marks the highest displayed score.</caption><thead><tr><th scope="col">Benchmark / task</th><th scope="col">Metric</th><th scope="col">Best comparison</th><th scope="col" class="model-value">SheetSage2</th></tr></thead><tbody>
+                <tr><th scope="row">GTZAN<small>Beat</small></th><td>F1</td><td class="score-value"><strong>88.75</strong><small>Beat This!</small></td><td class="score-value model-value">85.65</td></tr>
+                <tr><th scope="row">osu2017<small>Beat</small></th><td>F1</td><td class="score-value">91.55<small>Madmom</small></td><td class="score-value model-value"><strong>92.29</strong></td></tr>
+                <tr><th scope="row">GTZAN<small>Downbeat</small></th><td>F1</td><td class="score-value">78.28<small>Beat This!</small></td><td class="score-value model-value"><strong>79.51</strong></td></tr>
+                <tr><th scope="row">osu2017<small>Downbeat</small></th><td>F1</td><td class="score-value">84.99<small>Beat This!</small></td><td class="score-value model-value"><strong>91.97</strong></td></tr>
+                <tr><th scope="row">GiantSteps<small>Key</small></th><td>Weighted score</td><td class="score-value">74.62<small>Madmom</small></td><td class="score-value model-value"><strong>77.73</strong></td></tr>
+                <tr><th scope="row">GTZAN<small>Key</small></th><td>Weighted score</td><td class="score-value">74.43<small>S-KEY</small></td><td class="score-value model-value"><strong>75.77</strong></td></tr>
+                <tr><th scope="row">osu2017<small>Chord</small></th><td>Maj/min</td><td class="score-value">84.59<small>Jiang et al. 2019</small></td><td class="score-value model-value"><strong>90.08</strong></td></tr>
+                <tr><th scope="row">Chords1217<small>Chord</small></th><td>Maj/min</td><td class="score-value"><strong>84.09</strong><small>ChordFormer</small></td><td class="score-value model-value">83.81</td></tr>
+                <tr><th scope="row">HarmonixSet<small>Structure</small></th><td>Accuracy</td><td class="score-value">80.03<small>SongFormer</small></td><td class="score-value model-value"><strong>80.51</strong></td></tr>
+                <tr><th scope="row">HarmonixSet<small>Structure</small></th><td>Boundary F1 · 0.5 s</td><td class="score-value"><strong>70.63</strong><small>SongFormer</small></td><td class="score-value model-value">67.96</td></tr>
+                <tr><th scope="row">HarmonixSet<small>Structure</small></th><td>Boundary F1 · 3 s</td><td class="score-value">79.50<small>SongFormer</small></td><td class="score-value model-value"><strong>82.86</strong></td></tr>
+                <tr><th scope="row">RWC-Pop<small>Melody</small></th><td>Vocal pitch-class F1</td><td class="score-value">62.71<small>SheetSage1</small></td><td class="score-value model-value"><strong>82.51</strong></td></tr>
+                <tr><th scope="row">RWC-Pop<small>Melody</small></th><td>Full pitch-class F1</td><td class="score-value">64.02<small>SheetSage1</small></td><td class="score-value model-value"><strong>75.29</strong></td></tr>
+              </tbody></table>
+            </div>
+            <p class="component-protocol">SOTA counts refer to the leading scores against SheetSage1, Madmom, and the task-specific systems in this comparison. Results use one model selected by validation loss. Melody F1 measures pitch-class notes; structure F1 measures section boundaries at the stated tolerance. On Chords1217, ChordFormer uses five-fold cross-validation, while SheetSage2 evaluates one fixed model on all 1,217 tracks.</p>
+            <div class="benchmark-bottom"><p>Full comparison includes SheetSage1, Madmom, and task-specific systems.</p><a href="data/sheetsage2-benchmark-results.csv" download="">Download all results <span aria-hidden="true">↓</span></a></div>
+          </div>
+        </details>
+      </section>
+      <!-- END COMPONENT RESULTS -->
+    </section>
+
+    <section class="module-section training-data" id="training-data" aria-labelledby="trainingDataTitle">
+      <h2 id="trainingDataTitle">Training data</h2>
+      <p>Our models are trained primarily on CC0 music and synthetic data. Most of our synthetic training data is provided under license. We are committed to the ethical and responsible use of data.</p>
+      <dl class="training-data-scale" aria-label="Training data per model">
+        <div><dt>MERT2</dt><dd><data value="700000">700K</data> <span>hours</span></dd></div>
+        <div><dt>SheetSage2</dt><dd><data value="28400">28.4K</data> <span>hours</span></dd></div>
+        <div><dt>YuE2</dt><dd><data value="346000">346K</data> <span>hours</span></dd></div>
+      </dl>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-heading"><a class="footer-brand" href="#top">Anonymous ICLR submission</a><span>Frontier music, with a plan.</span><a href="#top" class="back-top">Back to top ↑</a></div>
+    <div class="footer-notes"><p>Score playback: abcjs · <a href="vendor/abcjs-LICENSE.md">Software license</a> · <a href="vendor/soundfonts/FluidR3_GM/LICENSE.txt">Piano sample credits</a></p></div>
+  </footer>
+
+  <noscript><p class="no-script">Enable JavaScript to browse the selected songs, scores, lyrics, and prompts.</p></noscript>
+
+  <section id="listeningPlayer" class="listening-bar" aria-label="Music player" hidden="">
+    <div class="listening-inner">
+      <div class="listening-track">
+        
+        <div class="listening-track-copy"><button type="button" class="listening-title" data-listening="title">Choose a song</button><p data-listening="detail">YuE2 listening collection</p><div class="listening-links" aria-label="Current song views"><button type="button" data-listening="lyrics" hidden="">Lyrics</button><button type="button" data-listening="score" hidden="">Score</button></div></div>
+      </div>
+      <div class="listening-transport">
+        <div class="listening-buttons">
+          <button type="button" class="listening-icon" data-listening="previous" aria-label="Previous track" title="Previous track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 5 8 12l11 7Z"></path></svg></button>
+          <button type="button" class="listening-icon listening-play" data-listening="play" aria-label="Play" aria-pressed="false"><svg class="listening-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"></path></svg><svg class="listening-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg></button>
+          <button type="button" class="listening-icon" data-listening="next" aria-label="Next track" title="Next track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M5 5l11 7-11 7Z"></path></svg></button>
+          <button type="button" class="listening-icon listening-shuffle" data-listening="shuffle" aria-label="Shuffle playback" aria-pressed="true" title="Shuffle playback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h2c5 0 9 12 14 12h2m-4-4 4 4-4 4M3 18h2c2 0 4-2 5-4m4-4c2-3 3-4 5-4h2m-4-4 4 4-4 4"></path></svg></button>
+        </div>
+        <div class="listening-timeline"><span data-listening="elapsed">0:00</span><input data-listening="seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Seek in current track" disabled=""><span data-listening="duration">0:00</span></div>
+      </div>
+      <div class="listening-options">
+        <div class="listening-queue-controls"><select data-listening="collection" aria-label="Playback collection"><option value="all">All songs</option><option value="planned">From score to song</option><option value="covers">Cover &amp; Editing</option><option value="agentic">Agentic music editing</option><option value="explorer">Genre Explorer</option></select><button type="button" class="listening-icon" data-listening="reshuffle" aria-label="Reshuffle songs and queue" title="Reshuffle songs and queue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5 8a7 7 0 0 1 12-3l3 4M4 15l3 4a7 7 0 0 0 12-3"></path></svg></button></div>
+        <div class="listening-meta"><span data-listening="count"></span><label class="listening-volume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 5 9H2v6h3l6 5ZM15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"></path></svg><input type="range" min="0" max="1" step="0.05" value="1" data-listening="volume" aria-label="Volume"></label></div>
+      </div>
+      <p class="listening-status" data-listening="status" role="status" aria-live="polite">Ready to play</p>
+    </div>
+    <div id="listeningParking" hidden=""></div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script defer="" src="data/cases.js?v=20260913-interstellar"></script>
+  <script defer="" src="data/benchmarks.js?v=20260912-suno-v6"></script>
+  <script defer="" src="data/agentic-editing.js?v=20260910-final-choice"></script>
+  <script defer="" src="static/overview.js?v=20260912-suno-v6"></script>
+  <script defer="" src="static/audio-player.js?v=20260909-player28"></script>
+  <script defer="" src="static/listening-player.js?v=20260910-editing1"></script>
+  <script defer="" src="static/score-player.js?v=20260909-linked29"></script>
+  <script defer="" src="static/score-notation.js?v=20260910-editing1"></script>
+  <script defer="" src="static/agentic-editing.js?v=20260910-editing2"></script>
+  <script defer="" src="static/app.js?v=20260913-interstellar"></script>
+
+
+</body></html>
